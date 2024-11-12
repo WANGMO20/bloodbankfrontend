@@ -1,0 +1,79 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Install dependencies for frontend and backend
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Install frontend dependencies
+        run: |
+          npm install
+
+  # Build frontend and backend
+  build:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+        env:
+          NODE_ENV: production
+
+  # Test frontend and backend
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+
+      - name: Run frontend tests
+        run: |
+          cd frontend
+          npm test
+
+  # Deploy frontend and backend
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v2
+
+      - name: Deploy frontend
+        run: |
+          cd frontend
+          echo "Deploying frontend..."
+          # Add actual deployment commands here (e.g., SSH commands, API calls, etc.)
+

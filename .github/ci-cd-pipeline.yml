@@ -1,53 +1,41 @@
-name: CI/CD Pipeline
+stages:
+  - build
+  - test
+  - deploy
 
-# Trigger the workflow on push or pull request to the main branch
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+variables:
+  PROJECT_NAME: "BloodBankManagementSystem"
+  ENVIRONMENT: "Production"
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+# Build job, only runs on the 'main' branch
+build_job:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'  # Runs only on the main branch
+  script:
+    - echo "Building $PROJECT_NAME..."
+    - mkdir -p build  # Make sure the build folder exists
+  artifacts:
+    paths:
+      - build/  # Save the build output
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+# Test job to run tests
+test_job:
+  stage: test
+  script:
+    - echo "Running tests for $PROJECT_NAME..."
+    - mkdir -p test-results  # Make sure the test results folder exists
+  artifacts:
+    paths:
+      - test-results/  # Save the test results
+ 
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'  # Set your desired Node version
+deploy_job:
+  stage: deploy
+  script:
+    - echo "Deploying $PROJECT_NAME to $ENVIRONMENT..."
+  after_script:
+    - echo "Deployment done for $PROJECT_NAME on branch $CI_COMMIT_REF_NAME"
+  only:
+    - master  # Runs only on the main branch
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build the project
-        run: npm run build
-
-  deploy:
-    needs: build  # This job runs only if the build job succeeds
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Deploy only from the main branch
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy to server
-        run: |
-          echo "Deploying..." # Replace with your actual deploy command, like uploading files via SSH
